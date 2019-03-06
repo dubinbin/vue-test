@@ -1,6 +1,9 @@
 <template>
   <div class="Index">
-    <Calendar/>
+    <Calendar
+    @changeDate="changeDate"
+    :signCalendarInfo="signCalendarInfo"
+    />
   </div>
 </template>
 
@@ -13,7 +16,5 @@ export default {
 </script>
 
 <style scoped>
-.Index {
-  width: 100%;
-}
+@import url('./Index.css');
 </style>

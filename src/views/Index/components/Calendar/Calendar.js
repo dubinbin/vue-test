@@ -2,30 +2,27 @@ import TipsBubble from '../TipsBubble.vue'
 
 export default {
     props: {
-        signCalendar: {
-            tpye: Array
-        },
-        specials_days: {
-            type: Array
+        signCalendarInfo: {
+            tpye: Object
         },
         getCurrentDayFormServer: {
             type: String
-        },
-        isFirstEnter: {
-            type: Boolean
         }
     },
     data() {
         return {
              currentMonthDayNum: [],
+             currentNewObjArr: [],
+             thisMonthFirstDay: 0,
              displayDateText: '',
              currentDaySelectIndex: '',
              currentYear: 0, 
              currentMonth: 0,
+             
              trueCurrentYear: 0,
              trueCurrentMonth: 0,
+
              ifToggleCalendarArr: [],
-             opacityHandle: false,
              isToggleCalendar: false,
              currentMandY: '',
              specialDays: [],
@@ -42,39 +39,41 @@ export default {
         this.initCalendar()
     },
     watch: {
+        'signCalendarInfo'(oldVal, newVal) {
+            this.currentNewObjArr = this.currentMonthDayNum.concat();
+            if (Object.getOwnPropertyNames(oldVal).length > 1) {
+                const special_daysToArr = Object.entries(oldVal.special_days)
+                const calender_dataToArr = Object.entries(oldVal.calender_data)
+ 
+                if (special_daysToArr.length > 0) {
+                    for (let i = 0; i<special_daysToArr.length; i++) {
+                        const index = this.currentMonthDayNum[(new Date(special_daysToArr[i][0]).getDate() + this.thisMonthFirstDay)]
+                        this.currentNewObjArr[index - 2 + this.thisMonthFirstDay] = {
+                            type: 'special',
+                            day: this.currentNewObjArr[index - 2 + this.thisMonthFirstDay],
+                            info: special_daysToArr[i][1]
+                        }
+                    }
+                }
+
+                if (calender_dataToArr.length > 0) {
+                    for (let j = 0; j < calender_dataToArr.length; j++) {
+                        const index = this.currentMonthDayNum[(new Date(calender_dataToArr[j][0]).getDate() + this.thisMonthFirstDay)]
+                        this.currentNewObjArr[(index - 2 + this.thisMonthFirstDay)] = {
+                            type: 'hasRecord',
+                            day: this.currentNewObjArr[index - 2 + this.thisMonthFirstDay],
+                            isSign: calender_dataToArr[j][1]
+                        }
+                    }
+                }
+            }
+        },
         'currentMonth'(oldVal, newVal) {
             if(newVal !== oldVal) {
                this.displayDateText = `${this.currentYear}年${this.currentMonth}月`
                this.currentMandY = `${this.currentYear}-${this.currentMonth < 10 ? '0' + this.currentMonth : this.currentMonth}`
                this.handleNewCalendarData(this.currentYear, this.currentMonth)
                this.punchRecord.length = 0
-            }
-        },
-        'signCalendar'(oldVal, newVal) {
-            if (oldVal) {
-                let emptySingle = '0'
-                const index = this.currentMonthDayNum.indexOf(1)
-                let CopyEmptyData = emptySingle.repeat(index)
-                this.punchRecord = CopyEmptyData.split('').concat(oldVal)
-            } else{
-                this.punchRecord.length = 0
-            }
-        },
-        'specials_days': function(newVal) {
-             if (newVal) {
-                newVal.map((v) => {
-                    const property = {
-                        money: v.money,
-                        need_num: v.need_num
-                    }
-                    this.specialDaysProperty.push(property)
-                    this.specialDays.push(v.days)
-                })
-             }
-        },
-        'isFirstEnter':function(newVal) {
-            if (newVal === false ) {
-                this.toggleCalendar(true)
             }
         }
     },
@@ -84,12 +83,12 @@ export default {
             const dateNow = new Date()
             const yearsNow = dateNow.getFullYear()
             const monthNow = dateNow.getMonth() + 1  
-            this.handleNewCalendarData(yearsNow, monthNow)
             this.currentYear = yearsNow
             this.currentMonth = monthNow
             this.trueCurrentYear = yearsNow
             this.trueCurrentMonth = monthNow
             this.displayDateText = `${this.currentYear}年${this.currentMonth}月`
+            this.handleNewCalendarData(yearsNow, monthNow)
         },
 
         calcMonthFirstDay(year, month) {
@@ -107,10 +106,11 @@ export default {
             this.currentMonthDayNum.length = 0
             const getMonthAllNum = this.calcCurrentMonth(2019, month)
             const getFirstDay = this.calcMonthFirstDay(year, month)
+            this.thisMonthFirstDay = getFirstDay
             for (let i = 1; i <= getMonthAllNum; i++ ) {
                 this.currentMonthDayNum.push(i)
             }
-            let emptySingle = '0'
+            let emptySingle = 'x'
             let CopyEmptyData = emptySingle.repeat(getFirstDay)
             this.currentMonthDayNum = CopyEmptyData.split('').concat(this.currentMonthDayNum)
             this.allDaysRow = this.currentMonthDayNum.length / 7 > parseInt(this.currentMonthDayNum.length / 7) ? parseInt(this.currentMonthDayNum.length / 7) : parseInt(this.currentMonthDayNum.length / 7) -  1
@@ -147,11 +147,7 @@ export default {
                 return 0
             }
         },
-
-        touchGift() {
-            this.$emit('touchGift', true)
-        },
-
+        
         clickCalendar(val) {
             if (val === 'prev') {
                 if (this.currentMonth === 1) {
@@ -174,18 +170,6 @@ export default {
             }
             this.$emit('changeDate', changeDate)
         },
-
-        caclStyle(index) {
-            if (this.punchRecord) {
-                if (this.punchRecord[index] === 1) {
-                     return 'isSign' 
-                } else if (this.punchRecord[index] === 0){
-                     return 'isUnSign'
-                }
-            } else {
-                return ''
-            }
-        }
     },
     components: {
         TipsBubble

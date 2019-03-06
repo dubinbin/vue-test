@@ -211,4 +211,9 @@
   .Calendar .isSpecialMoneyIndex .TipsBubble-wrap {
     position: relative;
   }
+  .Calendar .ifHasGift {
+    position: relative;
+    top: 1px;
+    width: 16px;
+  }
   
